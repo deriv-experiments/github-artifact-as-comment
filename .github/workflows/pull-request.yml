@@ -1,0 +1,35 @@
+name: PR Artifact Workflow
+
+on:
+  pull_request:
+    branches: 
+      - main
+
+permissions:
+  pull-requests: write
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Hello World HTML file
+        run: echo "Hello World" > hello.html
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: hello-world-artifact
+          path: hello.html
+
+  comment-PR:
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on PR
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          message: "Hello World artifact is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
