@@ -18,6 +18,13 @@ function calculateDiff(oldSize, newSize) {
   return newSize - oldSize;
 }
 
+function calculatePercentage(oldSize, newSize) {
+  if (oldSize === 0) {
+    return newSize === 0 ? 0 : 100;
+  }
+  return ((newSize - oldSize) / oldSize) * 100;
+}
+
 function formatSize(size, roundUp) {
   if (size === null) {
     return '-';
@@ -52,14 +59,40 @@ for (const pkg of packages) {
   }
 
   let diffText = '-';
-  let diffEmoji = '';
 
   if (diff !== 0) {
     diffText = diff < 0 ? '-' : '+' + formatSize(diff, true);
-    diffEmoji = diff < 0 ? '🟢' : '🟡';
   } else {
     diffText = '+0kb';
-    diffEmoji = ''; // No emoji when diff is 0
+  }
+
+  let percentage = oldSize && newSize ? calculatePercentage(oldSize, newSize) : null;
+
+  if (oldSize === null) {
+    percentage = 100;
+  }
+
+  if (newSize === null) {
+    percentage = -100;
+  }
+
+  let percentageText = '-';
+  let percentageEmoji;
+
+  if (percentage === 0) {
+    percentageEmoji = '';
+  } else if (percentage < 0) {
+    percentageEmoji = '🟢'; // green for decrease
+  } else if (percentage >= 0 && percentage <= 5) {
+    percentageEmoji = '🟡'; // yellow for small increase
+  } else {
+    percentageEmoji = '🔴'; // red for larger increase
+  }
+
+  if (percentage !== 0) {
+    percentageText = percentage.toFixed(2) + '%';
+  } else {
+    percentageText = '0%';
   }
 
   tableRows += `
@@ -67,7 +100,8 @@ for (const pkg of packages) {
       <td>${pkg}</td>
       <td>${formatSize(oldSize)}</td>
       <td>${formatSize(newSize)}</td>
-      <td>${diffText} ${diffEmoji}</td>
+      <td>${diffText}</td>
+      <td>${percentageText} ${percentageEmoji}</td>
     </tr>
   `.trim();
 }
@@ -79,6 +113,7 @@ console.log(`
     <th>old</th>
     <th>new</th>
     <th>diff</th>
+    <th>percentage</th>
   </thead>
   <tbody>
     ${tableRows}
