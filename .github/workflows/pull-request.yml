@@ -61,7 +61,7 @@ jobs:
         run: |
           cat hello.html
           cat old/hello.html
-          diff -u hello.html old/hello.html
+          diff -u hello.html old/hello.html || true
 
       - name: Upload Artifact
         id: upload-artifact
