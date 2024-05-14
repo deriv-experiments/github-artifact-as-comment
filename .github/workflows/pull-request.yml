@@ -30,6 +30,10 @@ jobs:
           npm install
           npm run build
           npm run analyze
+          cd packages/two
+          npm install
+          npm run build
+          npm run analyze
 
       - name: Get latest commit hash from main
         id: latest_commit
