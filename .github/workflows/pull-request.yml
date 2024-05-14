@@ -22,13 +22,6 @@ jobs:
       - name: Create Hello World HTML file
         run: echo "Hello World" > hello.html
 
-      - name: Upload Artifact
-        id: upload-artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: hello-${{ github.sha }}
-          path: hello.html
-
       - name: Comment on PR with Artifact URL
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v5
@@ -80,3 +73,10 @@ jobs:
           cat hello.html
           cat old/hello.html
           diff -u hello.html old/hello.html
+
+      - name: Upload Artifact
+        id: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-${{ github.sha }}
+          path: hello.html
