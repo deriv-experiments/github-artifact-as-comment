@@ -67,7 +67,8 @@ jobs:
             "${{ env.ARTIFACT_URL }}" \
             -o artifact.zip
           unzip artifact.zip -d old
-          ls -la old
+          cd old
+          unzip reports.zip
 
       - name: Compare report to main
         id: diff
