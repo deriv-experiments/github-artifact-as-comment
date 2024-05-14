@@ -13,22 +13,13 @@ function calculateDiff(oldSize, newSize) {
   return newSize - oldSize;
 }
 
-function formatSize(size, diff) {
+function formatSize(size) {
   if (size === null) {
     return '-';
   }
 
   const formattedSize = (size / 1024).toFixed(3) + 'kb';
-
-  if (diff === null) {
-    return formattedSize;
-  }
-
-  if (!diff) {
-    return formattedSize;
-  }
-
-  return formattedSize + ' ' + (diff < 0 ? '🟢' : '🟡');
+  return formattedSize;
 }
 
 const packagesDir = './packages';
@@ -45,12 +36,19 @@ for (const pkg of packages) {
   const newSize = newReport ? newReport[0].gzipSize : null;
   const diff = oldSize && newSize ? calculateDiff(oldSize, newSize) : null;
 
+  let diffText = '-';
+  let diffEmoji = '';
+  if (diff) {
+    diffText = formatSize(diff);
+    diffEmoji = diff < 0 ? '🟢' : '🟡';
+  }
+
   tableRows += `
     <tr>
       <td>${pkg}</td>
       <td>${formatSize(oldSize)}</td>
       <td>${formatSize(newSize, diff)}</td>
-      <td>${diff ? formatSize(diff) : '-'}</td>
+      <td>${diffText} ${diffEmoji}</td>
     </tr>
   `.trim();
 }
@@ -58,9 +56,9 @@ for (const pkg of packages) {
 console.log(`
 <table>
   <thead>
-    <th>path</th>
-    <th>main</th>
-    <th>this</th>
+    <th>package</th>
+    <th>old</th>
+    <th>new</th>
     <th>diff</th>
   </thead>
   <tbody>
