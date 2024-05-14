@@ -77,4 +77,6 @@ jobs:
       - name: Diff old and new
         if: steps.get_artifact_url.outputs.artifact_url != ''
         run: |
-          diff -u old/hello.html hello.html
+          cat hello.html
+          cat old/hello.html
+          diff -u hello.html old/hello.html
