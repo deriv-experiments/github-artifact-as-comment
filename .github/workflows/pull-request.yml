@@ -42,10 +42,10 @@ jobs:
               body: `Hello World artifact is available here: ${artifactUrl}`
             });
 
-      - name: Get latest commit hash from master
+      - name: Get latest commit hash from main
         id: latest_commit
         run: |
-          LATEST_COMMIT=$(git rev-parse origin/master)
+          LATEST_COMMIT=$(git rev-parse origin/main)
           echo "::set-output name=sha::$LATEST_COMMIT"
 
       - name: Check if previous artifact exists
