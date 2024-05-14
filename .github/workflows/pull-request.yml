@@ -22,19 +22,6 @@ jobs:
       - name: Create Hello World HTML file
         run: echo "Hello World" > hello.html
 
-      - name: Comment on PR with Artifact URL
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const artifactUrl = '${{ steps.upload-artifact.outputs.artifact-url }}';
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Hello World artifact is available here: ${artifactUrl}`
-            });
-
       - name: Get latest commit hash from main
         id: latest_commit
         run: |
@@ -60,7 +47,7 @@ jobs:
           echo "::set-output name=artifact_url::$ARTIFACT_URL"
 
       - name: Download artifact
-        if: steps.get_artifact_url.outputs.artifact_url != ''
+        if: steps.get_artifact_url.outputs.artifact_url != 'null'
         run: |
           curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "${{ steps.get_artifact_url.outputs.artifact_url }}" \
@@ -80,3 +67,16 @@ jobs:
         with:
           name: hello-${{ github.sha }}
           path: hello.html
+
+      - name: Comment on PR with Artifact URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const artifactUrl = '${{ steps.upload-artifact.outputs.artifact-url }}';
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Hello World artifact is available here: ${artifactUrl}`
+            });
