@@ -57,11 +57,11 @@ jobs:
           unzip artifact.zip -d old
 
       - name: Diff old and new
+        id: diff
         if: steps.get_artifact_url.outputs.artifact_url != 'null'
         run: |
-          cat hello.html
-          cat old/hello.html
-          diff -u hello.html old/hello.html || true
+          DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
+          echo "::set-output name=diff_output::$DIFF_OUTPUT"
 
       - name: Upload Artifact
         id: upload-artifact
@@ -81,4 +81,17 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
               body: `Hello World artifact is available here: ${artifactUrl}`
+            });
+
+      - name: Comment on PR with Diff Output
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const diffOutput = '${{ steps.diff.outputs.diff_output }}';
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Diff output:\n\`\`\`\n${diffOutput}\n\`\`\``
             });
