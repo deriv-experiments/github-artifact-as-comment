@@ -52,7 +52,7 @@ for (const pkg of packages) {
       <td>${formatSize(newSize, diff)}</td>
       <td>${diff ? formatSize(diff) : '-'}</td>
     </tr>
-  `;
+  `.trim();
 }
 
 console.log(`
@@ -67,4 +67,4 @@ console.log(`
     ${tableRows}
   </tbody>
 </table>
-`);
+`.trim());
