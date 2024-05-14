@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
+function roundUpToDecimals(num, decimals) {
+  const factor = Math.pow(10, decimals);
+  return Math.ceil(num * factor) / factor;
+}
+
 function readJsonFile(filePath) {
   if (fs.existsSync(filePath)) {
     const data = fs.readFileSync(filePath, 'utf-8');
@@ -13,12 +18,14 @@ function calculateDiff(oldSize, newSize) {
   return newSize - oldSize;
 }
 
-function formatSize(size) {
+function formatSize(size, roundUp) {
   if (size === null) {
     return '-';
   }
 
-  const formattedSize = (size / 1024).toFixed(3) + 'kb';
+  const formattedSize = roundUp
+    ? roundUpToDecimals(size / 1024, 2) + 'kb'
+    : (size / 1024).toFixed(2) + 'kb';
   return formattedSize;
 }
 
@@ -46,14 +53,20 @@ for (const pkg of packages) {
 
   let diffText = '-';
   let diffEmoji = '';
-  diffText = diff < 0 ? '-' : '+' + formatSize(diff);
-  diffEmoji = diff < 0 ? '🟢' : '🟡';
+
+  if (diff !== 0) {
+    diffText = diff < 0 ? '-' : '+' + formatSize(diff, true);
+    diffEmoji = diff < 0 ? '🟢' : '🟡';
+  } else {
+    diffText = '+0kb';
+    diffEmoji = ''; // No emoji when diff is 0
+  }
 
   tableRows += `
     <tr>
       <td>${pkg}</td>
       <td>${formatSize(oldSize)}</td>
-      <td>${formatSize(newSize, diff)}</td>
+      <td>${formatSize(newSize)}</td>
       <td>${diffText} ${diffEmoji}</td>
     </tr>
   `.trim();
