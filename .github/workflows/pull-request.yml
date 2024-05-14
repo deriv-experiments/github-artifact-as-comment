@@ -25,6 +25,7 @@ jobs:
       - name: Get latest commit hash from main
         id: latest_commit
         run: |
+          git fetch origin main
           LATEST_COMMIT=$(git rev-parse origin/main)
           echo "::set-output name=sha::$LATEST_COMMIT"
 
