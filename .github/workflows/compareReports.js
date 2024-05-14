@@ -1,0 +1,19 @@
+console.log(`
+<table>
+  <thead>
+    <th>path</th>
+    <th>main</th>
+    <th>this</th>
+    <th>diff</th>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>test</td>
+      <td>2</td>
+      <td>3</td>
+      <td>+1</td>
+    </tr>
+  </tbody>
+</table>
+`);

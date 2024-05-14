@@ -68,14 +68,14 @@ jobs:
             -o artifact.zip
           unzip artifact.zip -d old
 
-      # - name: Diff old and new
-      #   id: diff
-      #   if: env.ARTIFACT_URL != 'null'
-      #   run: |
-      #     DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
-      #     echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
-      #     echo "$DIFF_OUTPUT" >> $GITHUB_ENV
-      #     echo "EOF" >> $GITHUB_ENV
+      - name: Compare report to main
+        id: diff
+        if: env.ARTIFACT_URL != 'null'
+        run: |
+          DIFF_OUTPUT=$(node .github/workflows/compareReports.js)
+          echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$DIFF_OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Zip all report.json files
         run: |
