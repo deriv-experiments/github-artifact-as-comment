@@ -55,7 +55,7 @@ jobs:
           unzip artifact.zip -d old
 
       - name: Diff old and new
-        if: steps.get_artifact_url.outputs.artifact_url != ''
+        if: steps.get_artifact_url.outputs.artifact_url != 'null'
         run: |
           cat hello.html
           cat old/hello.html
