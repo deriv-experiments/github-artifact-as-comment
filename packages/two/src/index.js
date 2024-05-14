@@ -3,7 +3,7 @@ import _ from 'lodash';
 function component() {
   const element = document.createElement('div');
 
-  element.innerHTML = _.join(['Hello webpack', 'This is app two'], '. ');
+  element.innerHTML = _.join(['Hello webpack', 'This is the second app'], '. ');
 
   return element;
 }
