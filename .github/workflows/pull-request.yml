@@ -19,8 +19,17 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
 
-      - name: Create Hello World HTML file
-        run: echo "Hello World - Changed" > hello.html
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd packages/one
+          npm install
+          npm run build
+          npm run analyze
 
       - name: Get latest commit hash from main
         id: latest_commit
@@ -32,7 +41,7 @@ jobs:
       - name: Check if previous artifact exists
         id: artifact_check
         run: |
-          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ env.LATEST_COMMIT }}" | jq '.total_count' | awk '{print $1}')
+          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-${{ env.LATEST_COMMIT }}" | jq '.total_count' | awk '{print $1}')
           if [[ $ARTIFACT_EXISTS -gt 0 ]]; then
             echo "ARTIFACT_EXISTS=true" >> $GITHUB_ENV
           else
@@ -43,7 +52,7 @@ jobs:
         id: get_artifact_url
         run: |
           ARTIFACT_URL=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ env.LATEST_COMMIT }}" | \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-${{ env.LATEST_COMMIT }}" | \
             jq -r '.artifacts[0].archive_download_url')
           echo "ARTIFACT_URL=$ARTIFACT_URL" >> $GITHUB_ENV
 
@@ -55,21 +64,26 @@ jobs:
             -o artifact.zip
           unzip artifact.zip -d old
 
-      - name: Diff old and new
-        id: diff
-        if: env.ARTIFACT_URL != 'null'
-        run: |
-          DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
-          echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
-          echo "$DIFF_OUTPUT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+      # - name: Diff old and new
+      #   id: diff
+      #   if: env.ARTIFACT_URL != 'null'
+      #   run: |
+      #     DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
+      #     echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
+      #     echo "$DIFF_OUTPUT" >> $GITHUB_ENV
+      #     echo "EOF" >> $GITHUB_ENV
 
-      - name: Upload Artifact
+      - name: Zip all report.json files
+        run: |
+          zip -r reports.zip packages/*/report.json
+        shell: bash
+
+      - name: Upload New Artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: hello-${{ github.sha }}
-          path: hello.html
+          name: reports-${{ github.sha }}
+          path: reports.zip
 
       - name: Comment on PR with Artifact URL
         if: github.event_name == 'pull_request'
@@ -84,15 +98,15 @@ jobs:
               body: `Hello World artifact is available here: ${artifactUrl}`
             });
 
-      - name: Comment on PR with Diff Output
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const diffOutput = `${{ env.DIFF_OUTPUT }}`;
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `Diff output:\n\`\`\`\n${diffOutput}\n\`\`\``
-            });
+      # - name: Comment on PR with Diff Output
+      #   if: github.event_name == 'pull_request'
+      #   uses: actions/github-script@v5
+      #   with:
+      #     script: |
+      #       const diffOutput = `${{ env.DIFF_OUTPUT }}`;
+      #       github.rest.issues.createComment({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         issue_number: context.issue.number,
+      #         body: `Diff output:\n\`\`\`\n${diffOutput}\n\`\`\``
+      #       });
