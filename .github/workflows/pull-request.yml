@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Create Hello World HTML file
-        run: echo "Hello World" > hello.html
+        run: echo "Hello World - Changed" > hello.html
 
       - name: Comment on PR with Artifact URL
         if: github.event_name == 'pull_request'
