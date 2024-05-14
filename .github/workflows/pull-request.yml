@@ -30,7 +30,7 @@ jobs:
           npm install
           npm run build
           npm run analyze
-          cd packages/two
+          cd ../two
           npm install
           npm run build
           npm run analyze
