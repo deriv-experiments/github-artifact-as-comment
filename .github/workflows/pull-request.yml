@@ -61,7 +61,9 @@ jobs:
         if: steps.get_artifact_url.outputs.artifact_url != 'null'
         run: |
           DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
-          echo "::set-output name=diff_output::$DIFF_OUTPUT"
+          echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$DIFF_OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Upload Artifact
         id: upload-artifact
@@ -88,7 +90,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const diffOutput = '${{ steps.diff.outputs.diff_output }}';
+            const diffOutput = `${{ env.DIFF_OUTPUT }}`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
