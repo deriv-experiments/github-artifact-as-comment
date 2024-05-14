@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "analyze": "webpack --profile --json > stats.json && webpack-bundle-analyzer -m json stats.json ./dist && webpack-bundle-analyzer stats.json dist",
+    "analyze": "webpack --profile --json > stats.json && webpack-bundle-analyzer -m json stats.json ./dist",
     "build": "npx webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
