@@ -58,9 +58,18 @@ jobs:
             echo "::set-output name=exists::false"
           fi
 
-      - name: Download previous artifact
-        if: steps.artifact_check.outputs.exists == 'true'
-        uses: actions/download-artifact@v3
-        with:
-          name: hello-${{ steps.latest_commit.outputs.sha }}
-          path: previous-artifact
+      - name: Get artifact URL
+        id: get_artifact_url
+        run: |
+          ARTIFACT_URL=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ github.sha }}" | \
+            jq -r '.artifacts[0].archive_download_url')
+          echo "::set-output name=artifact_url::$ARTIFACT_URL"
+
+      - name: Download artifact
+        if: steps.get_artifact_url.outputs.artifact_url != ''
+        run: |
+          curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "${{ steps.get_artifact_url.outputs.artifact_url }}" \
+            -o artifact.zip
+          unzip artifact.zip
