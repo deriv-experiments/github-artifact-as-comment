@@ -1,0 +1,4 @@
+dist
+node_modules
+packages/*/stats.json
+packages/*/report.json
