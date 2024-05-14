@@ -34,14 +34,20 @@ for (const pkg of packages) {
 
   const oldSize = oldReport ? oldReport[0].gzipSize : null;
   const newSize = newReport ? newReport[0].gzipSize : null;
-  const diff = oldSize && newSize ? calculateDiff(oldSize, newSize) : null;
+  let diff = oldSize && newSize ? calculateDiff(oldSize, newSize) : null;
+
+  if (oldSize === null) {
+    diff = newSize;;
+  }
+
+  if (newSize === null) {
+    diff = oldSize;;
+  }
 
   let diffText = '-';
   let diffEmoji = '';
-  if (diff) {
-    diffText = formatSize(diff);
-    diffEmoji = diff < 0 ? '🟢' : '🟡';
-  }
+  diffText = diff < 0 ? '-' : '+' + formatSize(diff);
+  diffEmoji = diff < 0 ? '🟢' : '🟡';
 
   tableRows += `
     <tr>
