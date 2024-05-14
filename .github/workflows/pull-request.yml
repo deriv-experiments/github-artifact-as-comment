@@ -27,38 +27,37 @@ jobs:
         run: |
           git fetch origin main
           LATEST_COMMIT=$(git rev-parse origin/main)
-          echo "::set-output name=sha::$LATEST_COMMIT"
+          echo "LATEST_COMMIT=$LATEST_COMMIT" >> $GITHUB_ENV
 
       - name: Check if previous artifact exists
         id: artifact_check
         run: |
-          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ steps.latest_commit.outputs.sha }}" | jq '.total_count' | awk '{print $1}')
+          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ env.LATEST_COMMIT }}" | jq '.total_count' | awk '{print $1}')
           if [[ $ARTIFACT_EXISTS -gt 0 ]]; then
-            echo "::set-output name=exists::true"
+            echo "ARTIFACT_EXISTS=true" >> $GITHUB_ENV
           else
-            echo "::set-output name=exists::false"
+            echo "ARTIFACT_EXISTS=false" >> $GITHUB_ENV
           fi
 
       - name: Get artifact URL
         id: get_artifact_url
         run: |
           ARTIFACT_URL=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ steps.latest_commit.outputs.sha }}" | \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=hello-${{ env.LATEST_COMMIT }}" | \
             jq -r '.artifacts[0].archive_download_url')
-          echo "::set-output name=artifact_url::$ARTIFACT_URL"
-          echo "ARTIFACT_URL=$ARTIFACT_URL"
+          echo "ARTIFACT_URL=$ARTIFACT_URL" >> $GITHUB_ENV
 
       - name: Download artifact
-        if: steps.get_artifact_url.outputs.artifact_url != 'null'
+        if: env.ARTIFACT_URL != 'null'
         run: |
           curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "${{ steps.get_artifact_url.outputs.artifact_url }}" \
+            "${{ env.ARTIFACT_URL }}" \
             -o artifact.zip
           unzip artifact.zip -d old
 
       - name: Diff old and new
         id: diff
-        if: steps.get_artifact_url.outputs.artifact_url != 'null'
+        if: env.ARTIFACT_URL != 'null'
         run: |
           DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
           echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
