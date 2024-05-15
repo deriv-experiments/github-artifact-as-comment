@@ -30,6 +30,10 @@ jobs:
           npm install
           npm run build
           npm run analyze
+          cd ../two
+          npm install
+          npm run build
+          npm run analyze
 
       - name: Get latest commit hash from main
         id: latest_commit
@@ -63,15 +67,17 @@ jobs:
             "${{ env.ARTIFACT_URL }}" \
             -o artifact.zip
           unzip artifact.zip -d old
+          cd old
+          unzip reports.zip
 
-      # - name: Diff old and new
-      #   id: diff
-      #   if: env.ARTIFACT_URL != 'null'
-      #   run: |
-      #     DIFF_OUTPUT=$(diff -u hello.html old/hello.html || true)
-      #     echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
-      #     echo "$DIFF_OUTPUT" >> $GITHUB_ENV
-      #     echo "EOF" >> $GITHUB_ENV
+      - name: Compare report to main
+        id: diff
+        if: env.ARTIFACT_URL != 'null'
+        run: |
+          DIFF_OUTPUT=$(node .github/workflows/compareReports.js)
+          echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$DIFF_OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Zip all report.json files
         run: |
@@ -98,15 +104,15 @@ jobs:
               body: `Hello World artifact is available here: ${artifactUrl}`
             });
 
-      # - name: Comment on PR with Diff Output
-      #   if: github.event_name == 'pull_request'
-      #   uses: actions/github-script@v5
-      #   with:
-      #     script: |
-      #       const diffOutput = `${{ env.DIFF_OUTPUT }}`;
-      #       github.rest.issues.createComment({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         issue_number: context.issue.number,
-      #         body: `Diff output:\n\`\`\`\n${diffOutput}\n\`\`\``
-      #       });
+      - name: Comment on PR with Diff Output
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const diffOutput = `${{ env.DIFF_OUTPUT }}`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${diffOutput}`
+            });
