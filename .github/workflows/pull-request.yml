@@ -115,7 +115,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v5
         env:
-          DIFF_OUTPUT: ${{ steps.diff_output.outputs.diff_output }}
+          DIFF_OUTPUT: ${{ steps.diff.outputs.diff_output }}
         with:
           script: |
             const diffOutput = process.env.DIFF_OUTPUT;
