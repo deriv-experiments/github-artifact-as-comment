@@ -39,32 +39,39 @@ jobs:
         id: latest_commit
         run: |
           git fetch origin main
-          LATEST_COMMIT=$(git rev-parse origin/main)
-          echo "LATEST_COMMIT=$LATEST_COMMIT" >> $GITHUB_ENV
+          latest_commit=$(git rev-parse origin/main)
+          echo "latest_commit=$latest_commit" >> $GITHUB_OUTPUT
 
       - name: Check if previous artifact exists
+        env:
+          LATEST_COMMIT: ${{ steps.latest_commit.outputs.latest_commit }}
         id: artifact_check
         run: |
-          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-${{ env.LATEST_COMMIT }}" | jq '.total_count' | awk '{print $1}')
+          ARTIFACT_EXISTS=$(curl -s -H "Authorization: Bearer ${{ github.token }}" "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-$LATEST_COMMIT" | jq '.total_count' | awk '{print $1}')
           if [[ $ARTIFACT_EXISTS -gt 0 ]]; then
-            echo "ARTIFACT_EXISTS=true" >> $GITHUB_ENV
+            echo "artifact_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "ARTIFACT_EXISTS=false" >> $GITHUB_ENV
+            echo "artifact_exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Get artifact URL
         id: get_artifact_url
+        env:
+          LATEST_COMMIT: ${{ steps.latest_commit.outputs.latest_commit }}
         run: |
           ARTIFACT_URL=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-${{ env.LATEST_COMMIT }}" | \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=reports-${LATEST_COMMIT}" | \
             jq -r '.artifacts[0].archive_download_url')
-          echo "ARTIFACT_URL=$ARTIFACT_URL" >> $GITHUB_ENV
+          echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
 
       - name: Download artifact
-        if: env.ARTIFACT_URL != 'null'
+        if: steps.get_artifact_url.outputs.artifact_url != 'null'
+        env:
+          ARTIFACT_URL: ${{ steps.get_artifact_url.outputs.artifact_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "${{ env.ARTIFACT_URL }}" \
+          curl -L -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "$ARTIFACT_URL" \
             -o artifact.zip
           unzip artifact.zip -d old
           cd old
@@ -72,12 +79,12 @@ jobs:
 
       - name: Compare report to main
         id: diff
-        if: env.ARTIFACT_URL != 'null'
+        if: steps.get_artifact_url.outputs.artifact_url != 'null'
         run: |
           DIFF_OUTPUT=$(node .github/workflows/compareReports.js)
-          echo "DIFF_OUTPUT<<EOF" >> $GITHUB_ENV
-          echo "$DIFF_OUTPUT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "diff_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$diff_output" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Zip all report.json files
         run: |
@@ -109,7 +116,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const diffOutput = `${{ env.DIFF_OUTPUT }}`;
+            const diffOutput = `${{ steps.diff.outputs.diff_output }}`;
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
