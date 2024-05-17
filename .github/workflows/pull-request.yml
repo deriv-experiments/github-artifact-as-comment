@@ -83,7 +83,7 @@ jobs:
         run: |
           DIFF_OUTPUT=$(node .github/workflows/compareReports.js)
           echo "diff_output<<EOF" >> $GITHUB_OUTPUT
-          echo "$diff_output" >> $GITHUB_OUTPUT
+          echo "$DIFF_OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Zip all report.json files
@@ -123,5 +123,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `B: ${diffOutput}`
+              body: `${diffOutput}`
             });
